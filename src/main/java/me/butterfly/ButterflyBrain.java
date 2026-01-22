@@ -2,6 +2,11 @@ package me.butterfly;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import net.kyori.adventure.text.Component;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,6 +29,25 @@ public class ButterflyBrain implements Listener {
 
     private final ButterflyMain plugin;
 
+    // Action bar state cache (UI-only optimization)
+    private enum BarState {
+        NONE,
+        ACTIVE,
+        FLYING
+    }
+
+    private final Map<UUID, BarState> lastBarState = new HashMap<>();
+
+    private void updateBar(Player p, BarState newState, Component message) {
+    UUID id = p.getUniqueId();
+    BarState last = lastBarState.get(id);
+
+    if (last == newState) return;
+
+    p.sendActionBar(message);
+    lastBarState.put(id, newState);
+    }
+
     public ButterflyBrain(ButterflyMain plugin) {
         this.plugin = plugin;
 
@@ -39,6 +63,7 @@ public class ButterflyBrain implements Listener {
         Player p = e.getPlayer();
 
         if (plugin.enabled.remove(p.getUniqueId())) {
+            lastBarState.remove(p.getUniqueId());
             p.setAllowFlight(false);
             p.setFlying(false);
             p.sendMessage("§9Flight disabled§f: Game mode changed");
@@ -68,9 +93,10 @@ public class ButterflyBrain implements Listener {
 
         if (oldWasElytra && !newIsElytra) {
             plugin.enabled.remove(p.getUniqueId());
+            lastBarState.remove(p.getUniqueId());
             p.setFlying(false);
             p.setAllowFlight(false);
-            p.sendActionBar(Component.empty());
+            updateBar(p, BarState.NONE, Component.empty());
             p.sendMessage("§9Flight disabled§f: Elytra removed");
 
             plugin.getLogger().info(
@@ -83,11 +109,14 @@ public class ButterflyBrain implements Listener {
     private void tick() {
         for (Player p : Bukkit.getOnlinePlayers()) {
 
-            if (!plugin.interacted.contains(p.getUniqueId())) continue;
+            if (!plugin.interacted.contains(p.getUniqueId())) {
+            lastBarState.remove(p.getUniqueId());
+            continue;
+            }
 
             // Survival-only
             if (p.getGameMode() != GameMode.SURVIVAL) {
-                p.sendActionBar(Component.empty());
+                updateBar(p, BarState.NONE, Component.empty());
                 continue;
             }
 
@@ -103,7 +132,7 @@ public class ButterflyBrain implements Listener {
 
             // Indicator only when flight is possible
             if (!enabled || !hasUsableElytra) {
-                p.sendActionBar(Component.empty());
+                updateBar(p, BarState.NONE, Component.empty());
                 continue;
             }
 
@@ -118,7 +147,7 @@ public class ButterflyBrain implements Listener {
                     plugin.enabled.remove(p.getUniqueId());
                     p.setFlying(false);
                     p.setAllowFlight(false);
-                    p.sendActionBar(Component.empty());
+                    updateBar(p, BarState.NONE, Component.empty());
                     p.sendMessage("§9Flight disabled§f: Wings are broken");
 
                     plugin.getLogger().warning(
@@ -128,10 +157,10 @@ public class ButterflyBrain implements Listener {
                 }
 
                 plugin.lifespan.increment(p.getUniqueId());
-                p.sendActionBar(Component.text("§dButterfly§f: FLYING"));
+                updateBar(p, BarState.FLYING, Component.text("§dButterfly§f: FLYING"));
             } else {
                 // Glued but not flying yet
-                p.sendActionBar(Component.text("§dButterfly§f: ACTIVE"));
+                updateBar(p, BarState.ACTIVE, Component.text("§dButterfly§f: ACTIVE"));
             }
         }
     }
