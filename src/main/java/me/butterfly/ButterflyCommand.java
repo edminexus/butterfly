@@ -1,14 +1,3 @@
-/*1. Push to github before making changes
-Changes for 1.2.0:
-  2. add /butterfly help
-  3. add fall damage while flying and double jumping to drop
-  4. reduce the speed of flying 
-  5. add config file for almost every value (durability_consume, hunger_depletion, 
-  flying_speed, fall_damage(T/F), command_cooldown, etc if missing anything)
-  6. add logs
-  7. upload to plugin sites
-  8. and nothing else i hope*/
-
 package me.butterfly;
 
 import org.bukkit.*;
