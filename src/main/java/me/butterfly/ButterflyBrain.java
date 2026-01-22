@@ -1,3 +1,6 @@
+/*Implement periodic refresh for ACTIVE/FLYING states
+ */
+
 package me.butterfly;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
@@ -38,14 +41,28 @@ public class ButterflyBrain implements Listener {
 
     private final Map<UUID, BarState> lastBarState = new HashMap<>();
 
+    // Action bar refresh (UX)
+    private static final long BAR_REFRESH_MS = 2000;
+    private final Map<UUID, Long> lastBarUpdate = new HashMap<>();
+
+
+    // New UpdateBar Func.
     private void updateBar(Player p, BarState newState, Component message) {
-    UUID id = p.getUniqueId();
-    BarState last = lastBarState.get(id);
+        UUID id = p.getUniqueId();
+        BarState last = lastBarState.get(id);
+        long now = System.currentTimeMillis();
+        long lastTime = lastBarUpdate.getOrDefault(id, 0L);
 
-    if (last == newState) return;
+        boolean stateChanged = last != newState;
+        boolean shouldRefresh =
+                newState != BarState.NONE &&
+                now - lastTime >= BAR_REFRESH_MS;
 
-    p.sendActionBar(message);
-    lastBarState.put(id, newState);
+        if (!stateChanged && !shouldRefresh) return;
+
+        p.sendActionBar(message);
+        lastBarState.put(id, newState);
+        lastBarUpdate.put(id, now);
     }
 
     public ButterflyBrain(ButterflyMain plugin) {
@@ -64,6 +81,7 @@ public class ButterflyBrain implements Listener {
 
         if (plugin.enabled.remove(p.getUniqueId())) {
             lastBarState.remove(p.getUniqueId());
+            lastBarUpdate.remove(p.getUniqueId());
             p.setAllowFlight(false);
             p.setFlying(false);
             p.sendMessage("§9Flight disabled§f: Game mode changed");
@@ -94,6 +112,7 @@ public class ButterflyBrain implements Listener {
         if (oldWasElytra && !newIsElytra) {
             plugin.enabled.remove(p.getUniqueId());
             lastBarState.remove(p.getUniqueId());
+            lastBarUpdate.remove(p.getUniqueId());
             p.setFlying(false);
             p.setAllowFlight(false);
             updateBar(p, BarState.NONE, Component.empty());
@@ -111,6 +130,7 @@ public class ButterflyBrain implements Listener {
 
             if (!plugin.interacted.contains(p.getUniqueId())) {
             lastBarState.remove(p.getUniqueId());
+            lastBarUpdate.remove(p.getUniqueId());
             continue;
             }
 
