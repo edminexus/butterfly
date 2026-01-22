@@ -23,8 +23,7 @@ public class ButterflyPlugin extends JavaPlugin {
         getCommand("butterfly").setExecutor(cmd);
         getCommand("butterfly").setTabCompleter(cmd);
 
-        getServer().getPluginManager().registerEvents(new FlyListener(this), this);
-        getServer().getPluginManager().registerEvents(new ModeListener(this), this);
+        getServer().getPluginManager().registerEvents(new ButterflyBrain(this), this);
     }
 
     @Override
