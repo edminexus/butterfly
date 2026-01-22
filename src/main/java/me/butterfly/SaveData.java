@@ -14,9 +14,25 @@ public class SaveData {
     private final Map<UUID, Long> data = new HashMap<>();
     private final File file;
     private final FileConfiguration cfg;
+    private boolean dirty = false;
+
+    public void saveIfDirty() {
+        if (!dirty) return;
+
+        data.forEach((u, t) -> cfg.set(u.toString(), t));
+        try {
+            cfg.save(file);
+            dirty = false;
+        } catch (IOException ignored) {}
+    }
 
     public SaveData(ButterflyMain plugin) {
         this.plugin = plugin;
+
+        if (!plugin.getDataFolder().exists()) {
+            plugin.getDataFolder().mkdirs();
+        }
+
         file = new File(plugin.getDataFolder(), "lifespan.yml");
         cfg = YamlConfiguration.loadConfiguration(file);
     }
@@ -36,6 +52,7 @@ public class SaveData {
 
     public void increment(UUID u) {
         data.merge(u, 1L, Long::sum);
+        dirty = true;
     }
 
     private String fmt(long s) {

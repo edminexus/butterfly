@@ -24,10 +24,13 @@ public class ButterflyMain extends JavaPlugin {
         getCommand("butterfly").setTabCompleter(cmd);
 
         getServer().getPluginManager().registerEvents(new ButterflyBrain(this), this);
+
+        // Periodic lifespan save (every 5 minutes)
+        getServer().getScheduler().runTaskTimer(this, () -> lifespan.saveIfDirty(), 20L * 300, 20L * 300);
     }
 
     @Override
     public void onDisable() {
-        lifespan.save();
+        lifespan.saveIfDirty();
     }
 }
