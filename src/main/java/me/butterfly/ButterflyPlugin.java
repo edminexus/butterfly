@@ -19,9 +19,9 @@ public class ButterflyPlugin extends JavaPlugin {
         lifespan = new LifespanStore(this);
         lifespan.load();
 
-        ButterflyCommand cmd = new ButterflyCommand(this);
+        CommandHandler cmd = new CommandHandler(this);
         getCommand("butterfly").setExecutor(cmd);
-        getCommand("butterfly").setTabCompleter(new ButterflyTabCompleter());
+        getCommand("butterfly").setTabCompleter(cmd);
 
         getServer().getPluginManager().registerEvents(new FlyListener(this), this);
         getServer().getPluginManager().registerEvents(new ModeListener(this), this);
