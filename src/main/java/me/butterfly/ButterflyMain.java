@@ -11,11 +11,15 @@ public class ButterflyMain extends JavaPlugin {
     public final Map<UUID, Long> cooldowns = new HashMap<>();
 
     public SaveData lifespan;
+    private boolean debug;
 
     public static final long COOLDOWN_MS = 1000;
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+        debug = getConfig().getBoolean("debug", false);
+        
         lifespan = new SaveData(this);
         lifespan.load();
 
@@ -32,5 +36,20 @@ public class ButterflyMain extends JavaPlugin {
     @Override
     public void onDisable() {
         lifespan.saveIfDirty();
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean value) {
+        this.debug = value;
+        getConfig().set("debug", value);
+        saveConfig();
+    }
+
+    public void debug(String msg) {
+        if (!debug) return;
+        getLogger().info("[DEBUG] " + msg);
     }
 }

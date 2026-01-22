@@ -52,11 +52,13 @@ public class ButterflyBrain implements Listener {
         long lastTime = lastBarUpdate.getOrDefault(id, 0L);
 
         boolean stateChanged = last != newState;
-        boolean shouldRefresh =
-                newState != BarState.NONE &&
-                now - lastTime >= BAR_REFRESH_MS;
-
+        boolean shouldRefresh = newState != BarState.NONE && now - lastTime >= BAR_REFRESH_MS;
+        
         if (!stateChanged && !shouldRefresh) return;
+
+        if (stateChanged) {
+            plugin.debug("Player " + p.getName() + " state " + (last == null ? "NONE" : last) + " -> " + newState);
+        }
 
         p.sendActionBar(message);
         lastBarState.put(id, newState);
@@ -69,7 +71,7 @@ public class ButterflyBrain implements Listener {
         // Main flight tick loop (unchanged)
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
 
-        plugin.getLogger().info("ButterflyBrain initialized");
+        plugin.debug("ButterflyBrain initialized, tick task scheduled");
     }
 
     // Game Mode Change Checker
@@ -83,10 +85,6 @@ public class ButterflyBrain implements Listener {
             p.setAllowFlight(false);
             p.setFlying(false);
             p.sendMessage("§9Flight disabled§f: Game mode changed");
-
-            plugin.getLogger().info(
-                    "Flight disabled due to gamemode change for " + p.getName()
-            );
         }
     }
 
@@ -115,10 +113,6 @@ public class ButterflyBrain implements Listener {
             p.setAllowFlight(false);
             updateBar(p, BarState.NONE, Component.empty());
             p.sendMessage("§9Flight disabled§f: Elytra removed");
-
-            plugin.getLogger().info(
-                    "Flight disabled due to elytra removal for " + p.getName()
-            );
         }
     }
 
@@ -133,6 +127,8 @@ public class ButterflyBrain implements Listener {
             // Player offline → cleanup & skip
             if (p == null) {
                 it.remove();
+                plugin.enabled.remove(id);
+                plugin.debug("Cleaning up offline player UUID " + id);
                 lastBarState.remove(id);
                 lastBarUpdate.remove(id);
                 continue;
@@ -173,10 +169,6 @@ public class ButterflyBrain implements Listener {
                     p.setAllowFlight(false);
                     updateBar(p, BarState.NONE, Component.empty());
                     p.sendMessage("§9Flight disabled§f: Wings are broken");
-
-                    plugin.getLogger().warning(
-                            "Flight disabled due to broken elytra for " + p.getName()
-                    );
                     continue;
                 }
 

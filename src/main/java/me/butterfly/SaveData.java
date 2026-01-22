@@ -23,6 +23,7 @@ public class SaveData {
         try {
             cfg.save(file);
             dirty = false;
+            plugin.debug("Lifespan data saved to disk");
         } catch (IOException ignored) {}
     }
 
@@ -52,7 +53,11 @@ public class SaveData {
 
     public void increment(UUID u) {
         data.merge(u, 1L, Long::sum);
-        dirty = true;
+
+        if (!dirty) {
+            dirty = true;
+            plugin.debug("Lifespan marked dirty");
+        }
     }
 
     private String fmt(long s) {

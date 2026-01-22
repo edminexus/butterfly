@@ -23,7 +23,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     private final ButterflyMain plugin;
 
     private static final Set<String> SUBS =
-            Set.of("glue", "cut", "toggle", "canfly", "lifespan");
+            Set.of("glue", "cut", "toggle", "canfly", "lifespan", "debug");
 
     public CommandHandler(ButterflyMain plugin) {
         this.plugin = plugin;
@@ -65,6 +65,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
     private void enable(Player p) {
         plugin.interacted.add(p.getUniqueId());
+        plugin.debug("Player " + p.getName() + " entered Butterfly system");
 
         if (!survival(p)) {
             p.sendMessage("§cMode restriction§f: Only works in Survival mode");
@@ -122,7 +123,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         String sub = args[0].toLowerCase();
         if (!SUBS.contains(sub)) {
             p.sendMessage("§cUnknown subcommand");
-            p.sendMessage("§9Use /butterfly");
+            p.sendMessage("§eUse /butterfly");
             return true;
         }
 
@@ -171,6 +172,33 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                     plugin.lifespan.printSelf(p);
                 }
             }
+
+            case "debug" -> {
+                if (!p.hasPermission("butterfly.admin")) {
+                    p.sendMessage("§cCannot use debug§f: Insufficient permissions");
+                    return true;
+                }
+
+                if (args.length != 2) {
+                    p.sendMessage("§eUsage: /butterfly debug <on | off | toggle>");
+                    return true;
+                }
+
+                String mode = args[1].toLowerCase();
+
+                switch (mode) {
+                    case "on" -> plugin.setDebug(true);
+                    case "off" -> plugin.setDebug(false);
+                    case "toggle" -> plugin.setDebug(!plugin.isDebug());
+                    default -> {
+                        p.sendMessage("§eUsage: /butterfly debug <on | off | toggle>");
+                        return true;
+                    }
+                }
+
+                p.sendMessage("§dButterfly debug§f: " +
+                        (plugin.isDebug() ? "§aENABLED" : "§cDISABLED"));
+            }
         }
 
         return true;
@@ -189,6 +217,9 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
         if (args.length == 2 && args[0].equalsIgnoreCase("lifespan"))
             return List.of("all");
+        
+        if (args.length == 2 && args[0].equalsIgnoreCase("debug"))
+            return List.of("on", "off", "toggle");
 
         return List.of();
     }
