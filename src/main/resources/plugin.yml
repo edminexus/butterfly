@@ -1,0 +1,13 @@
+name: Butterfly
+version: 1.1.0
+main: me.butterfly.ButterflyPlugin
+api-version: 1.21
+author: Edminexus
+
+commands:
+  butterfly:
+    description: Butterfly flight control
+
+permissions:
+  butterfly.admin:
+    default: op
