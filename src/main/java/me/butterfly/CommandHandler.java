@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import me.butterfly.ButterflyMain;
 
 /**
  * Handles the /butterfly command AND tab completion.
@@ -19,12 +20,12 @@ import java.util.stream.Collectors;
  */
 public class CommandHandler implements CommandExecutor, TabCompleter {
 
-    private final ButterflyPlugin plugin;
+    private final ButterflyMain plugin;
 
     private static final Set<String> SUBS =
             Set.of("glue", "cut", "toggle", "canfly", "lifespan");
 
-    public CommandHandler(ButterflyPlugin plugin) {
+    public CommandHandler(ButterflyMain plugin) {
         this.plugin = plugin;
     }
 
@@ -35,7 +36,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         long now = System.currentTimeMillis();
         long last = plugin.cooldowns.getOrDefault(p.getUniqueId(), 0L);
 
-        if (now - last < ButterflyPlugin.COOLDOWN_MS) {
+        if (now - last < ButterflyMain.COOLDOWN_MS) {
             p.sendMessage("§cCannot perform action§f: Slow down");
             return true;
         }

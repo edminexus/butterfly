@@ -9,6 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+import me.butterfly.ButterflyMain;
 
 /**
  * Central brain for all butterfly flight behavior.
@@ -21,9 +22,9 @@ import org.bukkit.inventory.meta.Damageable;
  */
 public class ButterflyBrain implements Listener {
 
-    private final ButterflyPlugin plugin;
+    private final ButterflyMain plugin;
 
-    public ButterflyBrain(ButterflyPlugin plugin) {
+    public ButterflyBrain(ButterflyMain plugin) {
         this.plugin = plugin;
 
         // Main flight tick loop (unchanged)
