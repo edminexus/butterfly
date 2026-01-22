@@ -144,8 +144,8 @@ public class ButterflyBrain implements Listener {
                 continue;
             }
 
-            boolean enabled = plugin.enabled.contains(id);
-            boolean flying = p.isFlying();
+            boolean isEnabled = plugin.enabled.contains(id);
+            boolean isFlying = p.isFlying();
 
             ItemStack chest = p.getInventory().getChestplate();
             boolean hasUsableElytra =
@@ -155,13 +155,13 @@ public class ButterflyBrain implements Listener {
                             < chest.getType().getMaxDurability();
 
             // Indicator only when flight is possible
-            if (!enabled || !hasUsableElytra) {
+            if (!isEnabled || !hasUsableElytra) {
                 updateBar(p, BarState.NONE, Component.empty());
                 continue;
             }
 
             // Durability Drain & Lifespan record when actually flying
-            if (flying) {
+            if (isFlying) {
                 Damageable d = (Damageable) chest.getItemMeta();
                 d.setDamage(d.getDamage() + 2);
                 chest.setItemMeta(d);
