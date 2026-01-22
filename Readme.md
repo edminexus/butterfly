@@ -20,7 +20,7 @@ with durability cost, hunger cost, and clear visual feedback.
 
 - Java **21**
 - Paper or Purpur **1.21+**
-- and Elytra
+- and an Elytra
 
 
 ## 📜 Commands
