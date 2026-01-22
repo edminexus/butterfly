@@ -6,15 +6,16 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import me.butterfly.ButterflyMain;
 
-public class LifespanStore {
+public class SaveData {
 
-    private final ButterflyPlugin plugin;
+    private final ButterflyMain plugin;
     private final Map<UUID, Long> data = new HashMap<>();
     private final File file;
     private final FileConfiguration cfg;
 
-    public LifespanStore(ButterflyPlugin plugin) {
+    public SaveData(ButterflyMain plugin) {
         this.plugin = plugin;
         file = new File(plugin.getDataFolder(), "lifespan.yml");
         cfg = YamlConfiguration.loadConfiguration(file);
