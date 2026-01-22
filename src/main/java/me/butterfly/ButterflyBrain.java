@@ -6,28 +6,55 @@ import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 
-public class FlyListener implements Listener {
+/**
+ * Central brain for all butterfly flight behavior.
+ *
+ * This class is a mechanical merge of:
+ * - FlyListener
+ * - ModeListener
+ *
+ * Logic is intentionally unchanged.
+ */
+public class ButterflyBrain implements Listener {
 
     private final ButterflyPlugin plugin;
 
-    public FlyListener(ButterflyPlugin plugin) {
+    public ButterflyBrain(ButterflyPlugin plugin) {
         this.plugin = plugin;
+
+        // Main flight tick loop (unchanged)
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
+
+        plugin.getLogger().info("ButterflyBrain initialized");
     }
 
-    /* =====================================================
-       INSTANT MANUAL ELYTRA UNEQUIP (GROUND + MID-AIR)
-       ===================================================== */
+    // Game Mode Change Checker
+    @EventHandler
+    public void onModeChange(PlayerGameModeChangeEvent e) {
+        Player p = e.getPlayer();
+
+        if (plugin.enabled.remove(p.getUniqueId())) {
+            p.setAllowFlight(false);
+            p.setFlying(false);
+            p.sendMessage("§9Flight disabled§f: Game mode changed");
+
+            plugin.getLogger().info(
+                    "Flight disabled due to gamemode change for " + p.getName()
+            );
+        }
+    }
+
+    // Elytra unequip checker
     @EventHandler
     public void onArmorChange(PlayerArmorChangeEvent e) {
         Player p = e.getPlayer();
 
         if (p.getGameMode() != GameMode.SURVIVAL) return;
         if (!plugin.enabled.contains(p.getUniqueId())) return;
-
         if (e.getSlotType() != PlayerArmorChangeEvent.SlotType.CHEST) return;
 
         ItemStack oldItem = e.getOldItem();
@@ -38,23 +65,23 @@ public class FlyListener implements Listener {
         boolean newIsElytra =
                 newItem != null && newItem.getType() == Material.ELYTRA;
 
-        // Elytra removed by player → IMMEDIATE shutdown
         if (oldWasElytra && !newIsElytra) {
             plugin.enabled.remove(p.getUniqueId());
             p.setFlying(false);
             p.setAllowFlight(false);
             p.sendActionBar(Component.empty());
             p.sendMessage("§9Flight disabled§f: Elytra removed");
+
+            plugin.getLogger().info(
+                    "Flight disabled due to elytra removal for " + p.getName()
+            );
         }
     }
 
-    /* =====================================================
-       MAIN TICK LOOP (OLD, STABLE METHOD)
-       ===================================================== */
+    // Main Tick Loop
     private void tick() {
         for (Player p : Bukkit.getOnlinePlayers()) {
 
-            // Never interacted → no processing
             if (!plugin.interacted.contains(p.getUniqueId())) continue;
 
             // Survival-only
@@ -73,25 +100,29 @@ public class FlyListener implements Listener {
                     ((Damageable) chest.getItemMeta()).getDamage()
                             < chest.getType().getMaxDurability();
 
-            // Indicator only when flight is actually possible
+            // Indicator only when flight is possible
             if (!enabled || !hasUsableElytra) {
                 p.sendActionBar(Component.empty());
                 continue;
             }
 
-            // DURABILITY + LIFESPAN ONLY WHILE ACTUALLY FLYING
-            if (enabled && flying) {
+            // Durability Drain & Lifespan record when actually flying (not touching ground)
+            if (flying) {
                 Damageable d = (Damageable) chest.getItemMeta();
                 d.setDamage(d.getDamage() + 2);
                 chest.setItemMeta(d);
 
-                // Elytra broke
+                // Elytra breaks mid-flight
                 if (d.getDamage() >= chest.getType().getMaxDurability()) {
                     plugin.enabled.remove(p.getUniqueId());
                     p.setFlying(false);
                     p.setAllowFlight(false);
                     p.sendActionBar(Component.empty());
                     p.sendMessage("§9Flight disabled§f: Wings are broken");
+
+                    plugin.getLogger().warning(
+                            "Flight disabled due to broken elytra for " + p.getName()
+                    );
                     continue;
                 }
 
