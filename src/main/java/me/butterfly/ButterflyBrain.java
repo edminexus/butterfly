@@ -1,7 +1,5 @@
-/*Implement periodic refresh for ACTIVE/FLYING states
- */
-
 package me.butterfly;
+import me.butterfly.ButterflyMain;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import net.kyori.adventure.text.Component;
@@ -9,6 +7,7 @@ import net.kyori.adventure.text.Component;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Iterator;
 
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -17,7 +16,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
-import me.butterfly.ButterflyMain;
 
 /**
  * Central brain for all butterfly flight behavior.
@@ -42,7 +40,7 @@ public class ButterflyBrain implements Listener {
     private final Map<UUID, BarState> lastBarState = new HashMap<>();
 
     // Action bar refresh (UX)
-    private static final long BAR_REFRESH_MS = 2000;
+    private static final long BAR_REFRESH_MS = 1500;
     private final Map<UUID, Long> lastBarUpdate = new HashMap<>();
 
 
@@ -126,12 +124,18 @@ public class ButterflyBrain implements Listener {
 
     // Main Tick Loop
     private void tick() {
-        for (Player p : Bukkit.getOnlinePlayers()) {
+        Iterator<UUID> it = plugin.interacted.iterator();
 
-            if (!plugin.interacted.contains(p.getUniqueId())) {
-            lastBarState.remove(p.getUniqueId());
-            lastBarUpdate.remove(p.getUniqueId());
-            continue;
+        while (it.hasNext()) {
+            UUID id = it.next();
+            Player p = Bukkit.getPlayer(id);
+
+            // Player offline → cleanup & skip
+            if (p == null) {
+                it.remove();
+                lastBarState.remove(id);
+                lastBarUpdate.remove(id);
+                continue;
             }
 
             // Survival-only
@@ -140,7 +144,7 @@ public class ButterflyBrain implements Listener {
                 continue;
             }
 
-            boolean enabled = plugin.enabled.contains(p.getUniqueId());
+            boolean enabled = plugin.enabled.contains(id);
             boolean flying = p.isFlying();
 
             ItemStack chest = p.getInventory().getChestplate();
@@ -156,7 +160,7 @@ public class ButterflyBrain implements Listener {
                 continue;
             }
 
-            // Durability Drain & Lifespan record when actually flying (not touching ground)
+            // Durability Drain & Lifespan record when actually flying
             if (flying) {
                 Damageable d = (Damageable) chest.getItemMeta();
                 d.setDamage(d.getDamage() + 2);
@@ -164,7 +168,7 @@ public class ButterflyBrain implements Listener {
 
                 // Elytra breaks mid-flight
                 if (d.getDamage() >= chest.getType().getMaxDurability()) {
-                    plugin.enabled.remove(p.getUniqueId());
+                    plugin.enabled.remove(id);
                     p.setFlying(false);
                     p.setAllowFlight(false);
                     updateBar(p, BarState.NONE, Component.empty());
@@ -176,7 +180,7 @@ public class ButterflyBrain implements Listener {
                     continue;
                 }
 
-                plugin.lifespan.increment(p.getUniqueId());
+                plugin.lifespan.increment(id);
                 updateBar(p, BarState.FLYING, Component.text("§dButterfly§f: FLYING"));
             } else {
                 // Glued but not flying yet
