@@ -23,7 +23,7 @@ with durability cost, hunger cost, and clear visual feedback.
 - and an Elytra
 
 
-## 📜 Commands
+## Commands
 
 - `/butterfly` -> Shows Plugin info
 - `/butterfly glue` -> Enables flying
@@ -38,7 +38,7 @@ with durability cost, hunger cost, and clear visual feedback.
 - `butterfly.admin` | Allows `/butterfly lifespan all`
 
 
-## ⚙️ How It Works (Short)
+## How It Works (Short)
 
 - Flight only works in **Survival mode**
 - Player must be wearing an **usable Elytra**
@@ -49,7 +49,7 @@ with durability cost, hunger cost, and clear visual feedback.
 - Removing an Elytra disables flight automatically (Same happens when it breaks)
 
 
-## 🛠 Installation
+## Installation
 
 1. Download the latest release
 2. Place `Butterfly.jar` into your server’s `/plugins` folder
@@ -57,6 +57,6 @@ with durability cost, hunger cost, and clear visual feedback.
 4. Use `/butterfly` in-game to verify installation
 
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
