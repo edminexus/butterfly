@@ -13,12 +13,18 @@ public class ButterflyMain extends JavaPlugin {
     public SaveData lifespan;
     private boolean debug;
 
-    public static final long COOLDOWN_MS = 1000;
+    public long commandCooldownMs;
+    public long lifespanSavePeriodTicks;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         debug = getConfig().getBoolean("debug", false);
+
+        commandCooldownMs = getConfig().getLong("cooldown.command_ms", 1000L);
+
+        long lifespanSeconds = getConfig().getLong("lifespan.save_period_seconds", 300L);
+        lifespanSavePeriodTicks = lifespanSeconds * 20L;
         
         lifespan = new SaveData(this);
         lifespan.load();
@@ -29,8 +35,8 @@ public class ButterflyMain extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new ButterflyBrain(this), this);
 
-        // Periodic lifespan save (every 5 minutes)
-        getServer().getScheduler().runTaskTimer(this, () -> lifespan.saveIfDirty(), 20L * 300, 20L * 300);
+        // Periodic lifespan save (default 5 minutes, can be configured from config.yml)
+        getServer().getScheduler().runTaskTimer(this, () -> lifespan.saveIfDirty(), lifespanSavePeriodTicks, lifespanSavePeriodTicks);
     }
 
     @Override
