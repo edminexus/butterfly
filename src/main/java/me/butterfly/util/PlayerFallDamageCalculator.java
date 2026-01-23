@@ -21,13 +21,7 @@ public final class PlayerFallDamageCalculator {
      * @param fallDamageRule Whether gamerule fallDamage is enabled
      * @return final damage (double, in health points)
      */
-    public static double calculate(Player player, float fallDistance, Block landingBlock, boolean fallDamageRule) {
-
-        /* -----------------------------
-           GLOBAL IMMUNITIES
-         ----------------------------- */
-
-        if (!fallDamageRule) return 0.0;
+    public static double calculate(Player player, float fallDistance, Block landingBlock) {
 
         /* -----------------------------
            BLOCK-BASED NEGATION

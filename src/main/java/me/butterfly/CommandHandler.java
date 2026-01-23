@@ -11,14 +11,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import me.butterfly.ButterflyMain;
 
 
 public class CommandHandler implements CommandExecutor, TabCompleter {
 
     private final ButterflyMain plugin;
 
-    private static final Set<String> SUBS = Set.of("help", "glue", "cut", "toggle", "canfly", "lifespan", "debug");
+    private static final Set<String> SUBS = Set.of("help", "glue", "cut", "toggle", "canfly", "lifespan", "debug", "reload");
 
     private static final List<String[]> HELP_ENTRIES = List.of(
         new String[]{"/butterfly help", "Shows this help menu"},
@@ -28,7 +27,8 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         new String[]{"/butterfly canfly", "You can fly, or may be not. Find out"},
         new String[]{"/butterfly lifespan", "Shows your total flying time"},
         new String[]{"/butterfly lifespan all", "Show all players' flying time (admin)"},
-        new String[]{"/butterfly debug", "Toggle debug logging (admin)"}
+        new String[]{"/butterfly debug", "Toggle debug logging (admin)"},
+        new String[]{"/butterfly reload", "Reload configuration (admin)"}
     );
 
     public CommandHandler(ButterflyMain plugin) {
@@ -51,9 +51,14 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         return false;
     }
 
-    // Survival Checker
-    private boolean survival(Player p) {
-        return p.getGameMode() == GameMode.SURVIVAL;
+    private boolean isEnabled(Player p) {
+        return plugin.enabled.contains(p.getUniqueId());
+    }
+
+    private void resetFly(Player p) {
+        p.setFlying(false);
+        p.setAllowFlight(false);
+        p.setFlySpeed(ButterflyMain.VANILLA_FLY_SPEED);
     }
 
     private enum ElytraState { OK, NONE, BROKEN }
@@ -70,15 +75,14 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     }
 
     private void enable(Player p) {
-        plugin.interacted.add(p.getUniqueId());
         plugin.debug("Player " + p.getName() + " entered Butterfly system");
 
-        if (!survival(p)) {
+        if (p.getGameMode() != GameMode.SURVIVAL) {
             p.sendMessage("§cMode restriction§f: Only works in Survival mode");
             return;
         }
 
-        if (plugin.enabled.contains(p.getUniqueId())) {
+        if (isEnabled(p)) {
             p.sendMessage("§cCannot enable flight§f: Already enabled");
             return;
         }
@@ -93,7 +97,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             return;
         }
 
-        plugin.enabled.add(p.getUniqueId());
+        plugin.markEnabled(p.getUniqueId());
         p.setAllowFlight(true);
 
         // PREVENT speed leak: apply butterfly fly speed immediately
@@ -110,10 +114,8 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             return;
         }
 
-        p.setFlying(false);
         plugin.brain.clearFallState(id);
-        p.setAllowFlight(false);
-        p.setFlySpeed(0.1f); // reset to vanilla default
+        resetFly(p);
         p.sendMessage("§9Flight disabled§f: " + reason);
     }
 
@@ -127,7 +129,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         if (cooldown(p)) return true;
 
         if (args.length == 0) {
-            p.sendMessage("§dButterfly§f v" + plugin.getDescription().getVersion() + " by " + plugin.getDescription().getAuthors().get(0));
+            p.sendMessage("§dButterfly§f v" + plugin.getVersion() + " by " + plugin.getAuthor() + " §7(latest: checking...)");
             return true;
         }
 
@@ -145,12 +147,23 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                     p.sendMessage("§e" + entry[0] + "§f - " + entry[1]);
                 }
             }
+
+            case "reload" -> {
+                if (!p.hasPermission("butterfly.admin")) {
+                    p.sendMessage("§cCannot reload§f: Insufficient permissions");
+                    return true;
+                }
+
+                plugin.reloadButterfly();
+                p.sendMessage("§aButterfly reloaded§f: Configuration updated");
+            }
+
             case "glue" -> enable(p);
 
             case "cut" -> disable(p, "Wings cut");
 
             case "toggle" -> {
-                if (plugin.enabled.contains(p.getUniqueId()))
+                if (isEnabled(p))
                     disable(p, "Wings cut");
                 else
                     enable(p);
@@ -159,22 +172,23 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             case "canfly" -> {
                 GameMode gm = p.getGameMode();
 
-                if (gm == GameMode.CREATIVE)
-                    p.sendMessage("§dButterfly status§f: Creative mode");
-                else if (gm == GameMode.SPECTATOR)
-                    p.sendMessage("§dButterfly status§f: Spectator mode");
-                else if (gm == GameMode.ADVENTURE)
-                    p.sendMessage("§dButterfly status§f: Adventure mode");
-                else if (!plugin.enabled.contains(p.getUniqueId()))
-                    p.sendMessage("§dButterfly status§f: Disabled (wings not glued)");
-                else {
-                    ElytraState e = elytra(p);
-                    if (e == ElytraState.NONE)
-                        p.sendMessage("§dButterfly status§f: Disabled (no elytra)");
-                    else if (e == ElytraState.BROKEN)
-                        p.sendMessage("§dButterfly status§f: Disabled (wings are broken)");
-                    else
-                        p.sendMessage("§dButterfly status§f: Enabled");
+                switch (gm) {
+                    case CREATIVE -> p.sendMessage("§dButterfly status§f: Creative mode");
+                    case SPECTATOR -> p.sendMessage("§dButterfly status§f: Spectator mode");
+                    case ADVENTURE -> p.sendMessage("§dButterfly status§f: Adventure mode");
+                    default -> {
+                        if (!isEnabled(p)) {
+                            p.sendMessage("§dButterfly status§f: Disabled (wings not glued)");
+                            return true;
+                        }
+
+                        ElytraState e = elytra(p);
+                        switch (e) {
+                            case NONE -> p.sendMessage("§dButterfly status§f: Disabled (no elytra)");
+                            case BROKEN -> p.sendMessage("§dButterfly status§f: Disabled (wings are broken)");
+                            case OK -> p.sendMessage("§dButterfly status§f: Enabled");
+                        }
+                    }
                 }
             }
 

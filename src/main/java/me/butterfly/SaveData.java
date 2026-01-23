@@ -6,7 +6,6 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import me.butterfly.ButterflyMain;
 
 public class SaveData {
 
@@ -16,7 +15,7 @@ public class SaveData {
     private final FileConfiguration cfg;
     private boolean dirty = false;
 
-    public void saveIfDirty() {
+    public void flushIfDirty() {
         if (!dirty) return;
 
         data.forEach((u, t) -> cfg.set(u.toString(), t));
@@ -24,7 +23,10 @@ public class SaveData {
             cfg.save(file);
             dirty = false;
             plugin.debug("Lifespan data saved to disk");
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save lifespan.yml");
+            e.printStackTrace();
+        }
     }
 
     public SaveData(ButterflyMain plugin) {
@@ -48,15 +50,18 @@ public class SaveData {
         data.forEach((u, t) -> cfg.set(u.toString(), t));
         try {
             cfg.save(file);
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save lifespan.yml");
+            e.printStackTrace();
+        }
     }
 
     public void increment(UUID u) {
-        data.merge(u, 1L, Long::sum);
+        data.merge(u, 1L, (oldVal, one) -> oldVal + one);
 
         if (!dirty) {
             dirty = true;
-            plugin.debug("Lifespan marked dirty");
+            plugin.debug("Lifespan marked dirty (pending save)");
         }
     }
 
