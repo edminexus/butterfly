@@ -1,5 +1,7 @@
 package me.butterfly;
+
 import me.butterfly.ButterflyMain;
+import me.butterfly.util.PlayerFallDamageCalculator;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import net.kyori.adventure.text.Component;
@@ -10,22 +12,16 @@ import java.util.UUID;
 import java.util.Iterator;
 
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 
-/**
- * Central brain for all butterfly flight behavior.
- *
- * This class is a mechanical merge of:
- * - FlyListener
- * - ModeListener
- *
- * Logic is intentionally unchanged.
- */
+
 public class ButterflyBrain implements Listener {
 
     private final ButterflyMain plugin;
@@ -40,6 +36,9 @@ public class ButterflyBrain implements Listener {
     private final Map<UUID, Long> lastBarUpdate = new HashMap<>();
 
     private final int durabilityPerTick;
+
+    private final boolean fallDamageEnabled;
+    private final Map<UUID, Double> fallStartY = new HashMap<>();
 
     // New UpdateBar Func.
     private void updateBar(Player p, BarState newState, Component message) {
@@ -66,11 +65,65 @@ public class ButterflyBrain implements Listener {
         this.plugin = plugin;
         this.barRefreshMs = plugin.getConfig().getLong("actionbar.refresh_ms", 1500L);
         this.durabilityPerTick = plugin.durabilityPerTick;
+        this.fallDamageEnabled = plugin.getConfig().getBoolean("flight.fall_damage", true);
 
-        // Main flight tick loop (unchanged)
+        // Main flight tick loop
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
 
         plugin.debug("ButterflyBrain initialized, tick task scheduled");
+    }
+
+    private boolean isReallyOnGround(Player p) {
+        return p.getLocation().clone().add(0, -1, 0).getBlock().getType() != Material.AIR;
+    }
+
+    public void clearFallState(UUID id) {
+        fallStartY.remove(id);
+    }
+
+    @EventHandler
+    public void onMove(PlayerMoveEvent e) {
+        Player p = e.getPlayer();
+        UUID id = p.getUniqueId();
+
+        // Config gate
+        if (!fallDamageEnabled) return;
+
+        // Only when Butterfly flight is enabled
+        if (!plugin.enabled.contains(id)) return;
+        if (p.getGameMode() != GameMode.SURVIVAL) return;
+
+        // Ignore while actively flying
+        if (p.isFlying()) {
+            fallStartY.remove(id);
+            return;
+        }
+
+        double y = p.getLocation().getY();
+        double velY = p.getVelocity().getY();
+
+        // Start of fall
+        if (velY < -0.08 && !fallStartY.containsKey(id)) {
+            fallStartY.put(id, y);
+        }
+
+        if (fallStartY.containsKey(id) && isReallyOnGround(p)) {
+            double startY = fallStartY.remove(id);
+            float fallDistance = (float) (startY - p.getLocation().getY());
+
+            if (fallDistance <= 0) return;
+
+            Block landingBlock = p.getLocation().subtract(0, 1, 0).getBlock();
+
+            boolean fallDamageRule = p.getWorld().getGameRuleValue(GameRule.FALL_DAMAGE);
+
+            double damage = PlayerFallDamageCalculator.calculate(p, fallDistance, landingBlock, fallDamageRule);
+
+            if (damage > 0) {
+                p.damage(damage);
+                plugin.debug("Butterfly fall damage: " + p.getName() + " dist=" + fallDistance + " dmg=" + damage);
+            }
+        }
     }
 
     // Game Mode Change Checker
@@ -79,6 +132,9 @@ public class ButterflyBrain implements Listener {
         Player p = e.getPlayer();
 
         if (plugin.enabled.remove(p.getUniqueId())) {
+            UUID id = p.getUniqueId();
+
+            fallStartY.remove(id);
             lastBarState.remove(p.getUniqueId());
             lastBarUpdate.remove(p.getUniqueId());
             p.setAllowFlight(false);
@@ -99,12 +155,13 @@ public class ButterflyBrain implements Listener {
         ItemStack oldItem = e.getOldItem();
         ItemStack newItem = e.getNewItem();
 
-        boolean oldWasElytra =
-                oldItem != null && oldItem.getType() == Material.ELYTRA;
-        boolean newIsElytra =
-                newItem != null && newItem.getType() == Material.ELYTRA;
+        boolean oldWasElytra = oldItem != null && oldItem.getType() == Material.ELYTRA;
+        boolean newIsElytra = newItem != null && newItem.getType() == Material.ELYTRA;
 
         if (oldWasElytra && !newIsElytra) {
+            UUID id = p.getUniqueId();
+
+            fallStartY.remove(id);
             plugin.enabled.remove(p.getUniqueId());
             lastBarState.remove(p.getUniqueId());
             lastBarUpdate.remove(p.getUniqueId());
@@ -160,6 +217,7 @@ public class ButterflyBrain implements Listener {
 
                 // Elytra breaks mid-flight
                 if (d.getDamage() >= chest.getType().getMaxDurability()) {
+                    fallStartY.remove(id);
                     plugin.enabled.remove(id);
                     p.setFlying(false);
                     p.setAllowFlight(false);

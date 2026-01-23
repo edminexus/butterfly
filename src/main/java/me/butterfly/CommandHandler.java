@@ -13,11 +13,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import me.butterfly.ButterflyMain;
 
-/**
- * Handles the /butterfly command AND tab completion.
- * This is a pure merge of ButterflyCommand + ButterflyTabCompleter.
- * Logic is intentionally unchanged.
- */
+
 public class CommandHandler implements CommandExecutor, TabCompleter {
 
     private final ButterflyMain plugin;
@@ -104,12 +100,14 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     }
 
     private void disable(Player p, String reason) {
+        UUID id = p.getUniqueId();
         if (!plugin.enabled.remove(p.getUniqueId())) {
             p.sendMessage("§cCannot disable flight§f: Already disabled");
             return;
         }
 
         p.setFlying(false);
+        plugin.brain.clearFallState(id);
         p.setAllowFlight(false);
         p.sendMessage("§9Flight disabled§f: " + reason);
     }
@@ -124,9 +122,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         if (cooldown(p)) return true;
 
         if (args.length == 0) {
-            p.sendMessage("§dButterfly§f v" +
-                    plugin.getDescription().getVersion() +
-                    " by " + plugin.getDescription().getAuthors().get(0));
+            p.sendMessage("§dButterfly§f v" + plugin.getDescription().getVersion() + " by " + plugin.getDescription().getAuthors().get(0));
             return true;
         }
 

@@ -18,6 +18,8 @@ public class ButterflyMain extends JavaPlugin {
     public int durabilityPerTick;
     public int hungerCostOnEnable;
 
+    public ButterflyBrain brain;
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -36,7 +38,8 @@ public class ButterflyMain extends JavaPlugin {
         getCommand("butterfly").setExecutor(cmd);
         getCommand("butterfly").setTabCompleter(cmd);
 
-        getServer().getPluginManager().registerEvents(new ButterflyBrain(this), this);
+        brain = new ButterflyBrain(this);
+        getServer().getPluginManager().registerEvents(brain, this);
 
         // Periodic lifespan save (default 5 minutes, can be configured from config.yml)
         getServer().getScheduler().runTaskTimer(this, () -> lifespan.saveIfDirty(), lifespanSavePeriodTicks, lifespanSavePeriodTicks);
