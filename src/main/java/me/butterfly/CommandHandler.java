@@ -22,8 +22,18 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
     private final ButterflyMain plugin;
 
-    private static final Set<String> SUBS =
-            Set.of("glue", "cut", "toggle", "canfly", "lifespan", "debug");
+    private static final Set<String> SUBS = Set.of("help", "glue", "cut", "toggle", "canfly", "lifespan", "debug");
+
+    private static final List<String[]> HELP_ENTRIES = List.of(
+        new String[]{"/butterfly help", "Shows this help menu"},
+        new String[]{"/butterfly glue", "Glue Butterfly wings (Enable fly)"},
+        new String[]{"/butterfly cut", "Cut Butterfly wings (Disable fly)"},
+        new String[]{"/butterfly toggle", "Toggle butterfly flight"},
+        new String[]{"/butterfly canfly", "You can fly, or may be not. Find out"},
+        new String[]{"/butterfly lifespan", "Shows your total flying time"},
+        new String[]{"/butterfly lifespan all", "Show all players' flying time (admin)"},
+        new String[]{"/butterfly debug", "Toggle debug logging (admin)"}
+    );
 
     public CommandHandler(ButterflyMain plugin) {
         this.plugin = plugin;
@@ -128,6 +138,12 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         }
 
         switch (sub) {
+            case "help" -> {
+                p.sendMessage("§dButterfly Commands§f:");
+                for (String[] entry : HELP_ENTRIES) {
+                    p.sendMessage("§e" + entry[0] + "§f - " + entry[1]);
+                }
+            }
             case "glue" -> enable(p);
 
             case "cut" -> disable(p, "Wings cut");
