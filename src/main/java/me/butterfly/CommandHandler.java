@@ -99,7 +99,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
         plugin.enabled.add(p.getUniqueId());
         p.setAllowFlight(true);
-        p.setFoodLevel(Math.max(0, p.getFoodLevel() - 10));
+        p.setFoodLevel(Math.max(0, p.getFoodLevel() - plugin.hungerCostOnEnable));
         p.sendMessage("§aEnable flight§f: Wings glued");
     }
 

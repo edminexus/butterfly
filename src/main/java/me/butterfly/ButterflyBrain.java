@@ -31,11 +31,7 @@ public class ButterflyBrain implements Listener {
     private final ButterflyMain plugin;
 
     // Action bar state cache (UI-only optimization)
-    private enum BarState {
-        NONE,
-        ACTIVE,
-        FLYING
-    }
+    private enum BarState {NONE, ACTIVE, FLYING}
 
     private final Map<UUID, BarState> lastBarState = new HashMap<>();
 
@@ -43,6 +39,7 @@ public class ButterflyBrain implements Listener {
     private final long barRefreshMs;
     private final Map<UUID, Long> lastBarUpdate = new HashMap<>();
 
+    private final int durabilityPerTick;
 
     // New UpdateBar Func.
     private void updateBar(Player p, BarState newState, Component message) {
@@ -68,6 +65,7 @@ public class ButterflyBrain implements Listener {
     public ButterflyBrain(ButterflyMain plugin) {
         this.plugin = plugin;
         this.barRefreshMs = plugin.getConfig().getLong("actionbar.refresh_ms", 1500L);
+        this.durabilityPerTick = plugin.durabilityPerTick;
 
         // Main flight tick loop (unchanged)
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
@@ -145,11 +143,8 @@ public class ButterflyBrain implements Listener {
             boolean isFlying = p.isFlying();
 
             ItemStack chest = p.getInventory().getChestplate();
-            boolean hasUsableElytra =
-                    chest != null &&
-                    chest.getType() == Material.ELYTRA &&
-                    ((Damageable) chest.getItemMeta()).getDamage()
-                            < chest.getType().getMaxDurability();
+            boolean hasUsableElytra = chest != null && chest.getType() == Material.ELYTRA &&
+                    ((Damageable) chest.getItemMeta()).getDamage() < chest.getType().getMaxDurability();
 
             // Indicator only when flight is possible
             if (!isEnabled || !hasUsableElytra) {
@@ -160,7 +155,7 @@ public class ButterflyBrain implements Listener {
             // Durability Drain & Lifespan record when actually flying
             if (isFlying) {
                 Damageable d = (Damageable) chest.getItemMeta();
-                d.setDamage(d.getDamage() + 2);
+                d.setDamage(d.getDamage() + durabilityPerTick);
                 chest.setItemMeta(d);
 
                 // Elytra breaks mid-flight
