@@ -184,20 +184,41 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
+                boolean before = plugin.isDebug();
                 String mode = args[1].toLowerCase();
 
                 switch (mode) {
-                    case "on" -> plugin.setDebug(true);
-                    case "off" -> plugin.setDebug(false);
-                    case "toggle" -> plugin.setDebug(!plugin.isDebug());
+                    case "on" -> {
+                        if (before) {
+                            p.sendMessage("§cCannot enable debug§f: Debug already enabled");
+                            return true;
+                        }
+                        plugin.setDebug(true);
+                        p.sendMessage("§aDebug enabled§f: Logging active");
+                    }
+
+                    case "off" -> {
+                        if (!before) {
+                            p.sendMessage("§cCannot disable debug§f: Debug already disabled");
+                            return true;
+                        }
+                        plugin.setDebug(false);
+                        p.sendMessage("§eDebug disabled§f: Logging stopped");
+                    }
+
+                    case "toggle" -> {
+                        plugin.setDebug(!before);
+                        if (before)
+                            p.sendMessage("§eDebug disabled§f: Logging stopped");
+                        else
+                            p.sendMessage("§aDebug enabled§f: Logging active");
+                    }
+
                     default -> {
                         p.sendMessage("§eUsage: /butterfly debug <on | off | toggle>");
                         return true;
                     }
                 }
-
-                p.sendMessage("§dButterfly debug§f: " +
-                        (plugin.isDebug() ? "§aENABLED" : "§cDISABLED"));
             }
         }
 
