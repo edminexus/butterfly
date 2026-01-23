@@ -40,7 +40,7 @@ public class ButterflyBrain implements Listener {
     private final Map<UUID, BarState> lastBarState = new HashMap<>();
 
     // Action bar refresh (UX)
-    private static final long BAR_REFRESH_MS = 1500;
+    private final long barRefreshMs;
     private final Map<UUID, Long> lastBarUpdate = new HashMap<>();
 
 
@@ -52,7 +52,7 @@ public class ButterflyBrain implements Listener {
         long lastTime = lastBarUpdate.getOrDefault(id, 0L);
 
         boolean stateChanged = last != newState;
-        boolean shouldRefresh = newState != BarState.NONE && now - lastTime >= BAR_REFRESH_MS;
+        boolean shouldRefresh = newState != BarState.NONE && now - lastTime >= barRefreshMs;
         
         if (!stateChanged && !shouldRefresh) return;
 
@@ -67,6 +67,7 @@ public class ButterflyBrain implements Listener {
 
     public ButterflyBrain(ButterflyMain plugin) {
         this.plugin = plugin;
+        this.barRefreshMs = plugin.getConfig().getLong("actionbar.refresh_ms", 1500L);
 
         // Main flight tick loop (unchanged)
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
