@@ -1,1 +1,22 @@
+# Enable debug logging, same as the "/butterfly debug" in game which can be activated at runtime. (admin only)
+# Leave default, if you don't want your logs to be bombarded with Butterflies.
 debug: false
+
+# Rate-limit cooldown between each Butterfly command usage.
+# Leave default (Recommended). Unless you are running a potato. 
+cooldown:
+  # Minimum time (in milliseconds).
+  command_ms: 1000
+
+# ActionBar Refresh time.
+# Determines how often the ActionBar can refresh.
+# Leave Default (Recommended).
+actionbar:
+  # Time (in milliseconds).
+  refresh_ms: 1500
+
+# Lifespan tracking
+# Determines how often lifespan data is saved to disk.
+lifespan:
+  # Time (in seconds)
+  save_period_seconds: 300
