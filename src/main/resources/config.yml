@@ -15,8 +15,29 @@ actionbar:
   # Time (in milliseconds).
   refresh_ms: 1500
 
-# Lifespan tracking
+# Lifespan tracking.
 # Determines how often lifespan data is saved to disk.
 lifespan:
-  # Time (in seconds)
+  # Time (in seconds).
   save_period_seconds: 300
+
+# Flight behavior settings
+# Change them as you like or keep default 
+# These values has been tested from the start of this project to better match the concept of flying in survival
+# and their trade-offs so if you think these aren't enough, experiment with your own values. 
+flight:
+  # Elytra durability consumed per second while flying (Vanilla Elytra fly consumes 1 durability per sec)
+  durability_per_sec: 2
+
+  # Hunger points consumed when enabling flight (Just like HP, 1 hunger bar = 2 points that means to drain full hunger, you need to set it to 20 hence it's the max value)
+  hunger_cost_on_enable: 10 # Consumes 5 hunger bars
+
+  # (NOT IMPLEMENTED YET)
+  # Placeholder: flight speed modifier
+  # Default vanilla elytra behavior is used
+  speed: 1.0
+
+  # (NOT IMPLEMENTED YET)
+  # Placeholder: allow fall damage. 
+  # If double-jumping mid air (while glue is still on), it negates fall damage as a default behaviour in vanilla for creative-like fly. This setting patches that.
+  fall_damage: true
