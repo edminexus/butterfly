@@ -46,7 +46,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         long now = System.currentTimeMillis();
         long last = plugin.cooldowns.getOrDefault(p.getUniqueId(), 0L);
 
-        if (now - last < ButterflyMain.COOLDOWN_MS) {
+        if (now - last < plugin.commandCooldownMs) {
             p.sendMessage("§cCannot perform action§f: Slow down");
             return true;
         }
