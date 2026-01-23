@@ -40,6 +40,8 @@ public class ButterflyBrain implements Listener {
     private final boolean fallDamageEnabled;
     private final Map<UUID, Double> fallStartY = new HashMap<>();
 
+    private final float flySpeed;
+
     // New UpdateBar Func.
     private void updateBar(Player p, BarState newState, Component message) {
         UUID id = p.getUniqueId();
@@ -66,6 +68,7 @@ public class ButterflyBrain implements Listener {
         this.barRefreshMs = plugin.getConfig().getLong("actionbar.refresh_ms", 1500L);
         this.durabilityPerTick = plugin.durabilityPerTick;
         this.fallDamageEnabled = plugin.getConfig().getBoolean("flight.fall_damage", true);
+        this.flySpeed = (float) plugin.getConfig().getDouble("flight.speed", 0.05);
 
         // Main flight tick loop
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
@@ -79,6 +82,10 @@ public class ButterflyBrain implements Listener {
 
     public void clearFallState(UUID id) {
         fallStartY.remove(id);
+    }
+
+    public float getFlySpeed() {
+        return flySpeed;
     }
 
     @EventHandler
@@ -95,6 +102,12 @@ public class ButterflyBrain implements Listener {
 
         // Ignore while actively flying
         if (p.isFlying()) {
+            fallStartY.remove(id);
+            return;
+        }
+
+        // Elytra gliding cancels fall tracking
+        if (p.isGliding()) {
             fallStartY.remove(id);
             return;
         }
@@ -139,6 +152,7 @@ public class ButterflyBrain implements Listener {
             lastBarUpdate.remove(p.getUniqueId());
             p.setAllowFlight(false);
             p.setFlying(false);
+            p.setFlySpeed(0.1f); // reset to vanilla default
             p.sendMessage("§9Flight disabled§f: Game mode changed");
         }
     }
@@ -167,6 +181,7 @@ public class ButterflyBrain implements Listener {
             lastBarUpdate.remove(p.getUniqueId());
             p.setFlying(false);
             p.setAllowFlight(false);
+            p.setFlySpeed(0.1f); // reset to vanilla default
             updateBar(p, BarState.NONE, Component.empty());
             p.sendMessage("§9Flight disabled§f: Elytra removed");
         }
@@ -211,6 +226,11 @@ public class ButterflyBrain implements Listener {
 
             // Durability Drain & Lifespan record when actually flying
             if (isFlying) {
+                // Apply reduced fly speed once when flight starts
+                if (p.getFlySpeed() != flySpeed) {
+                    p.setFlySpeed(flySpeed);
+                }
+
                 Damageable d = (Damageable) chest.getItemMeta();
                 d.setDamage(d.getDamage() + durabilityPerTick);
                 chest.setItemMeta(d);
@@ -221,6 +241,7 @@ public class ButterflyBrain implements Listener {
                     plugin.enabled.remove(id);
                     p.setFlying(false);
                     p.setAllowFlight(false);
+                    p.setFlySpeed(0.1f); // reset to vanilla default
                     updateBar(p, BarState.NONE, Component.empty());
                     p.sendMessage("§9Flight disabled§f: Wings are broken");
                     continue;

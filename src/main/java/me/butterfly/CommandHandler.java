@@ -95,6 +95,10 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
         plugin.enabled.add(p.getUniqueId());
         p.setAllowFlight(true);
+
+        // PREVENT speed leak: apply butterfly fly speed immediately
+        p.setFlySpeed(plugin.brain.getFlySpeed());
+
         p.setFoodLevel(Math.max(0, p.getFoodLevel() - plugin.hungerCostOnEnable));
         p.sendMessage("§aEnable flight§f: Wings glued");
     }
@@ -109,6 +113,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         p.setFlying(false);
         plugin.brain.clearFallState(id);
         p.setAllowFlight(false);
+        p.setFlySpeed(0.1f); // reset to vanilla default
         p.sendMessage("§9Flight disabled§f: " + reason);
     }
 
