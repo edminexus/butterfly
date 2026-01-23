@@ -15,6 +15,8 @@ public class ButterflyMain extends JavaPlugin {
 
     public long commandCooldownMs;
     public long lifespanSavePeriodTicks;
+    public int durabilityPerTick;
+    public int hungerCostOnEnable;
 
     @Override
     public void onEnable() {
@@ -22,9 +24,10 @@ public class ButterflyMain extends JavaPlugin {
         debug = getConfig().getBoolean("debug", false);
 
         commandCooldownMs = getConfig().getLong("cooldown.command_ms", 1000L);
-
         long lifespanSeconds = getConfig().getLong("lifespan.save_period_seconds", 300L);
         lifespanSavePeriodTicks = lifespanSeconds * 20L;
+        durabilityPerTick = getConfig().getInt("flight.durability_per_sec", 2);
+        hungerCostOnEnable = getConfig().getInt("flight.hunger_cost_on_enable", 10);
         
         lifespan = new SaveData(this);
         lifespan.load();
