@@ -31,13 +31,14 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         new String[]{"/butterfly reload", "Reload configuration (admin)"}
     );
 
+    private enum ElytraState { OK, NONE, BROKEN }
+
     public CommandHandler(ButterflyMain plugin) {
         this.plugin = plugin;
     }
 
     // Helper funcs
-
-    // Rate limiter for commands
+    // Rate limiter
     private boolean cooldown(Player p) {
         long now = System.currentTimeMillis();
         long last = plugin.cooldowns.getOrDefault(p.getUniqueId(), 0L);
@@ -61,9 +62,8 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         p.setFlySpeed(ButterflyMain.VANILLA_FLY_SPEED);
     }
 
-    private enum ElytraState { OK, NONE, BROKEN }
 
-    // Gets Elytra State
+    // Returns Elytra State
     private ElytraState elytra(Player p) {
         ItemStack c = p.getInventory().getChestplate();
         if (c == null || c.getType() != Material.ELYTRA) return ElytraState.NONE;
@@ -74,6 +74,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 : ElytraState.OK;
     }
 
+    // On Enable 
     private void enable(Player p) {
         plugin.debug("Player " + p.getName() + " entered Butterfly system");
 
@@ -107,6 +108,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         p.sendMessage("§aEnable flight§f: Wings glued");
     }
 
+    // On Disable
     private void disable(Player p, String reason) {
         UUID id = p.getUniqueId();
         if (!plugin.enabled.remove(p.getUniqueId())) {
@@ -114,13 +116,13 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             return;
         }
 
+        plugin.interacted.remove(id);
         plugin.brain.clearFallState(id);
         resetFly(p);
         p.sendMessage("§9Flight disabled§f: " + reason);
     }
 
     // Executor
-
     // Main Command Handler
     @Override
     public boolean onCommand(CommandSender s, Command c, String l, String[] args) {
@@ -129,7 +131,8 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         if (cooldown(p)) return true;
 
         if (args.length == 0) {
-            p.sendMessage("§dButterfly§f v" + plugin.getVersion() + " by " + plugin.getAuthor() + " §7(latest: checking...)");
+            p.sendMessage("§dButterfly§f v" + plugin.getVersion() + " by " + plugin.getAuthor());
+            p.sendMessage("§7latest§f v: " + plugin.getLatestVersion());
             return true;
         }
 
@@ -252,7 +255,6 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 }
             }
         }
-
         return true;
     }
 

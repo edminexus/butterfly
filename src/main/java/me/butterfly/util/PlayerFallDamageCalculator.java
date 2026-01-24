@@ -14,19 +14,14 @@ public final class PlayerFallDamageCalculator {
 
     /**
      * Wiki-accurate fall damage calculation for players only.
-     *
-     * @param player        Player taking damage
-     * @param fallDistance  Player#getFallDistance()
-     * @param landingBlock  Block player landed on
-     * @param fallDamageRule Whether gamerule fallDamage is enabled
+     * @param player (Player taking damage)
+     * @param fallDistance (Player#getFallDistance())
+     * @param landingBlock (Block player landed on)
      * @return final damage (double, in health points)
      */
     public static double calculate(Player player, float fallDistance, Block landingBlock) {
-
-        /* -----------------------------
-           BLOCK-BASED NEGATION
-         ----------------------------- */
-
+        
+        // Block Based Negation
         if (landingBlock != null) {
             Material type = landingBlock.getType();
 
@@ -34,14 +29,9 @@ public final class PlayerFallDamageCalculator {
             if (negatesAllDamage(type)) {
                 return 0.0;
             }
-
-            // Percentage-based blocks handled later
         }
 
-        /* -----------------------------
-           POTION EFFECTS
-         ----------------------------- */
-
+        // Potion-Effect Based Negation
         // Slow Falling: complete negation
         if (player.hasPotionEffect(PotionEffectType.SLOW_FALLING)) {
             return 0.0;
@@ -53,24 +43,16 @@ public final class PlayerFallDamageCalculator {
             fallDistance -= (jump.getAmplifier() + 1);
         }
 
-        /* -----------------------------
-           BASE FALL DAMAGE (WIKI)
-           damage = max(0, fallDistance - 3)
-         ----------------------------- */
-
+        // Base Fall Damage
         double damage = Math.max(0.0, fallDistance - 3.0);
 
         if (damage <= 0.0) {
             return 0.0;
         }
 
-        /* -----------------------------
-           BLOCK DAMAGE MULTIPLIERS
-         ----------------------------- */
-
+        // Block Based Negation: Multipliers
         if (landingBlock != null) {
             Material type = landingBlock.getType();
-
             if (type == Material.HAY_BLOCK || type == Material.HONEY_BLOCK) {
                 damage *= 0.20;
             } else if (type.name().endsWith("_BED")) {
@@ -78,14 +60,10 @@ public final class PlayerFallDamageCalculator {
             }
         }
 
-        /* -----------------------------
-           ENCHANTMENTS
-         ----------------------------- */
-
+        // Enchanment Based Negation
         // Feather Falling
         int featherLevel = getFeatherFalling(player);
         if (featherLevel > 0) {
-            // Vanilla: 12% per level, capped ~48%
             double reduction = Math.min(featherLevel * 0.12, 0.48);
             damage *= (1.0 - reduction);
         }
@@ -93,15 +71,12 @@ public final class PlayerFallDamageCalculator {
         // Protection enchantment (all armor pieces)
         int protectionLevel = getProtectionLevel(player);
         if (protectionLevel > 0) {
-            // Each level ≈ 4%, capped at 80%
             double reduction = Math.min(protectionLevel * 0.04, 0.80);
             damage *= (1.0 - reduction);
         }
 
-        /* -----------------------------
-           RESISTANCE EFFECT
-         ----------------------------- */
-
+        // Resistence Potion-Effect Negation
+        // Don't know why it is here or it should be here or not but don't wanna touch it cz it works (as intended I hope)
         PotionEffect resistance = player.getPotionEffect(PotionEffectType.RESISTANCE);
         if (resistance != null) {
             int level = resistance.getAmplifier() + 1;
@@ -111,11 +86,8 @@ public final class PlayerFallDamageCalculator {
         return Math.max(0.0, damage);
     }
 
-    /* =====================================================
-       Helpers
-     ===================================================== */
-
-    private static boolean negatesAllDamage(Material type) {
+    // Helpers here
+    public static boolean negatesAllDamage(Material type) {
         return switch (type) {
             case WATER, BUBBLE_COLUMN, COBWEB, SWEET_BERRY_BUSH, SLIME_BLOCK, POWDER_SNOW, LADDER, VINE,
                  TWISTING_VINES, WEEPING_VINES, SCAFFOLDING -> true;
