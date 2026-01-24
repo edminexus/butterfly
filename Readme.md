@@ -1,62 +1,90 @@
 # Butterfly
 
-A survival-only Elytra-based flight plugin for Paper / Purpur Minecraft servers.
+Butterfly is a **survival-only Elytra-based flight plugin** for Paper / Purpur Minecraft servers.
 
-Butterfly allows players to temporarily use creative-fly in Survival mode using Elytra,
-with durability cost, hunger cost, and clear visual feedback.
+It allows players to temporarily use **creative-style flight in Survival mode** while wearing an Elytra, while enforcing **balanced trade-offs and clean state handling** to prevent abuse or permanent advantages.
 
+Butterfly relies on **vanilla mechanics**, extending creative flight rather than replacing it with custom physics. This makes it predictable, lightweight, and safe to run long-term.
+
+---
+
+## Core Concept
+
+- Flight is available **only in Survival mode**
+- A **usable Elytra** is required at all times
+- Flight is automatically disabled when:
+  - The Elytra is removed or breaks
+  - The player disconnects
+  - The server shuts down
+
+---
+
+## Survival Trade-offs
+
+While flight is active, Butterfly applies configurable penalties:
+
+- Increased Elytra durability usage
+- Hunger consumption on activation
+- Reduced flight speed
+- Tracked total flight time per player
+- Visual feedback via ActionBar
+
+These mechanics ensure flight remains a **temporary utility**, not a permanent bypass.
+
+---
 
 ## Features
 
-- Creative-like fly in Survival
-- Elytra-based flying (no Elytra = no flight)
-- Increased Elytra durability drain while flying
-- Lifespan tracking per player
-- Clean ActionBar flight indicator
-- Designed for Paper / Purpur 1.21+
+- Creative-style flight in Survival
+- Elytra-based activation
+- Configurable durability, hunger, speed penalties, and fall damage toggle
+- Per-player flight lifespan tracking
+- ActionBar flight indicator
+- Lightweight and performance-friendly
 
+---
 
-## Requirements
+## 🧩 Requirements
 
-- Java **21**
-- Paper or Purpur **1.21+**
-- and an Elytra
+- **Paper or Purpur** `1.21+`
+- **Java 21**
+- An **Elytra**
 
+---
 
-## Commands
+## ⌨ Commands
 
-- `/butterfly` -> Shows Plugin info
-- `/butterfly glue` -> Enables flying
-- `/butterfly cut` -> Disables flying
-- `/butterfly toggle` -> Exactly what it sounds like
-- `/butterfly lifespan` -> Shows your total flight time
-- `/butterfly lifespan all` -> Shows all players' flight time (admin)
+### Player Commands
 
+- ` /butterfly ` — Show plugin information  
+- ` /butterfly glue ` — Enable flight  
+- ` /butterfly cut ` — Disable flight  
+- ` /butterfly toggle ` — Exactly what it's sounds like 
+- ` /butterfly lifespan ` — Show your total flight time  
+- ` /butterfly canfly ` — Check whether you can fly  
+- ` /butterfly help ` — Show all available commands  
 
-## Permissions
+### Admin Commands
 
-- `butterfly.admin` | Allows `/butterfly lifespan all`
+- ` /butterfly lifespan all ` — Show all players' flight time  
+- ` /butterfly debug on ` — Enable debug logging  
+- ` /butterfly debug off ` — Disable debug logging  
+- ` /butterfly debug toggle ` — ...  
+- ` /butterfly reload ` — Reload the configuration  
 
+---
 
-## How It Works (Short)
+## 🔐 Permissions
 
-- Flight only works in **Survival mode**
-- Player must be wearing an **usable Elytra**
-- While flying:
-  - Elytra durability drains faster
-  - Hunger drains by half on initial gluing
-  - Flight time is tracked
-- Removing an Elytra disables flight automatically (Same happens when it breaks)
+### `butterfly.admin`
+- **Default:** op  
+- Allows administrative commands and debugging tools
 
+---
 
-## Installation
+## 📦 Installation
 
-1. Download the latest release
-2. Place `Butterfly.jar` into your server’s `/plugins` folder
-3. Restart the server
-4. Use `/butterfly` in-game to verify installation
-
-
-## License
-
-This project is licensed under the MIT License.
+1. Download the plugin JAR  
+2. Place it in the `/plugins` directory  
+3. Start or restart the server  
+4. Adjust `config.yml` if needed  
